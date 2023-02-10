@@ -1,0 +1,169 @@
+---
+title: "Common heart diseases in Scotland by age group in 2021"
+author: "Inmaculada Ruiz-Morales"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+```{r cars}
+# importing packages
+library(tidyverse)
+library(janitor)
+library(knitr)
+library(lubridate)
+```
+
+The dataset used in this report is available in [The Scottish Health and Social Care Open Data platform](https://www.opendata.nhs.scot/dataset/scottish-heart-disease-statistics/resource/748e2065-b447-4b75-99bd-f17f26f3eaef)
+
+```{r}
+#reading the data from website www.opendata.nhs.scot
+
+activity_raw <- read_csv("https://www.opendata.nhs.scot/dataset/0e17f3fc-9429-48aa-b1ba-2b7e55688253/resource/748e2065-b447-4b75-99bd-f17f26f3eaef/download/hd_activitybyhbr.csv")
+```
+
+
+
+```{r}
+# some cleaning / tidying of the dataset
+activity <- activity_raw %>%
+  clean_names() %>%
+  separate(financial_year, into = c("year", NA), sep = "/", convert = TRUE) %>%
+  mutate(sex = str_replace(sex, "Females", "Female")) %>%
+  mutate(sex = str_replace(sex, "Males", "Male"))
+  
+head(activity) %>%
+  kable()
+```
+
+
+### EDA
+
+This set collects data for four different kind of diagnosis, named as: **"Coronary Heart Disease",
+"Heart Attack", "Heart Failure" and "Angina"**
+
+```{r}
+#code to find out how many different diagnosis are in the data set:
+activity %>%
+  distinct(diagnosis) %>%
+  kable()
+```
+
+Patients are assigned one of the following age range groups: **"0-44 years", "45-64 years", "65-74 years", "75plus years", "All", "under75 years"**
+
+```{r}
+#To find out how many age groups are in the data set:
+activity %>%
+  distinct(age_group) %>%
+  kable()
+```
+
+
+
+## Total number of patients discharged in 2021 **age 0-44** 
+
+Most common heart disease for this age group is Coronary Heart Disease, followed by Heart Attack, Heart Failure and Angina.
+
+```{r}
+activity_44 <- activity %>%
+  select(year, age_group, sex, diagnosis, number_of_discharges)%>%
+  mutate(heart_disease = as.factor(diagnosis)) %>% 
+  filter(age_group=="0-44 years")%>%
+  filter(year==2021) %>%
+  group_by(heart_disease) %>%
+  summarize(total_44=sum(number_of_discharges, na.rm = TRUE)) %>%
+  arrange(desc(total_44))
+kable(activity_44)
+
+```
+
+
+## Total number of patients discharged in 2021 **age 45-64 years**
+
+Most common heart disease for this age group is Coronary Heart Disease, followed by Heart Attack, Heart Failure and Angina.
+
+```{r}
+activity_64 <- activity %>%
+  select(year, age_group, sex, diagnosis, number_of_discharges) %>%
+  mutate(heart_disease = as.factor(diagnosis)) %>%
+  filter(age_group=="45-64 years") %>%
+  filter(year==2021) %>%
+  group_by(heart_disease) %>%
+  summarize(total_64 = sum(number_of_discharges, na.rm = TRUE)) %>%
+  arrange(desc(total_64))
+kable(activity_64)
+
+```
+
+
+
+## Total number of patients discharged in 2021 **age 65-74 years**
+
+Most common heart disease for this age group is Coronary Heart Disease, followed by Heart Attack, Heart Failure and Angina.
+
+```{r}
+activity_74 <- activity %>%
+  select(year, age_group, sex, diagnosis, number_of_discharges) %>%
+  mutate(heart_disease = as.factor(diagnosis)) %>%
+  filter(age_group=="65-74 years" & year==2021) %>%
+  filter(year==2021) %>%
+  group_by(heart_disease) %>%
+  summarize(total_74 = sum(number_of_discharges, na.rm = TRUE)) %>%
+  arrange(desc(total_74))
+kable(activity_74)
+
+```
+
+
+
+## Total number of patients discharged in 2021 **age 75plus years** 
+
+Most common heart disease for this age group is Coronary Heart Disease, followed by Heart Failure, Heart Attack and Angina.
+
+```{r}
+activity_75plus <- activity %>%
+  select(year, age_group, sex, diagnosis, number_of_discharges) %>%
+  mutate(heart_disease = as.factor(diagnosis)) %>%
+  filter(age_group=="75plus years") %>%
+  filter(year==2021) %>%
+  group_by(heart_disease) %>%
+  summarize(total_75plus = sum(number_of_discharges, na.rm = TRUE)) %>%
+  arrange(desc(total_75plus))
+kable(activity_75plus)
+
+```
+
+## Ploting the data for each age group 
+
+limits of the y axis are fixed so the four plots can  be compared:
+
+```{r}
+ggplot(activity_44, aes(x=heart_disease, y=total_44)) + geom_col(fill="darkgreen", alpha=0.6) + ylim(0,145000) + ggtitle("Common heart diseases in Scotland for age group 0-44 (Year 2021)")+ ylab("Number of patients") + xlab("Heart disease")
+```
+
+
+```{r}
+ggplot(activity_64, aes(x=heart_disease, y=total_64)) + geom_col(fill="orange", alpha=0.6) + ylim(0,145000) + 
+  ggtitle("Common heart diseases in Scotland for age group 45-64 (Year 2021)") + ylab("Number of patients") + xlab("Heart disease")
+```
+
+
+```{r}
+ggplot(activity_74, aes(x=heart_disease, y=total_74)) + geom_col(fill="red", alpha=0.6) + ylim(0,145000)+ 
+  ggtitle("Common heart diseases in Scotland for age group 65-74 (Year 2021)") + ylab("Number of patients") + xlab("Heart disease")
+```
+
+```{r}
+ggplot(activity_75plus, aes(x=heart_disease, y=total_75plus)) + geom_col(fill="brown", alpha=0.6) + ylim(0,145000)+ 
+  ggtitle("Common heart diseases in Scotland for age group 75+ (Year 2021)") + ylab("Number of patients") + xlab("Heart disease")
+```
+
+
+
+# Comparing the four plots:
+
+![](https://inmaruiz.com/wp-content/uploads/2023/02/comparation-1024x773.png)
